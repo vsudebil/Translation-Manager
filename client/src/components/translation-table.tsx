@@ -36,9 +36,9 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
       if (!file) return;
 
       // Update the nested object structure  
-      const updatedContent = { ...(file.content as object) };
+      const updatedContent = { ...(file.content as Record<string, any>) };
       const keyParts = keyPath.split('.');
-      let current = updatedContent;
+      let current = updatedContent as Record<string, any>;
       
       for (let i = 0; i < keyParts.length - 1; i++) {
         if (!current[keyParts[i]]) {
