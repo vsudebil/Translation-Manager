@@ -179,6 +179,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
               height: `${virtualizer.getTotalSize()}px`,
               minWidth: `${256 + (projectData.project.locales.length * 320)}px`,
               position: 'relative',
+              paddingTop: '56px', // Height of the sticky header
             }}
           >
             {virtualizer.getVirtualItems().map((virtualItem) => {
@@ -193,7 +194,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                     left: 0,
                     width: '100%',
                     height: `${virtualItem.size}px`,
-                    transform: `translateY(${virtualItem.start}px)`,
+                    transform: `translateY(${virtualItem.start + 56}px)`, // Offset by header height
                   }}
                 >
                   {item?.type === 'fileHeader' ? (
