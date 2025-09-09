@@ -7,8 +7,8 @@ import TranslationManager from "@/pages/translation-manager";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={TranslationManager} />
-      <Route path="/project/:id" component={TranslationManager} />
+      <Route path="/Translation-Manager" component={TranslationManager} />
+      <Route path="/Translation-Manager/project/:id" component={TranslationManager} />
       <Route component={NotFound} />
     </Switch>
   );
