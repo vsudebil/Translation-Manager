@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +19,12 @@ interface AddLocaleModalProps {
   onSuccess: () => void;
 }
 
-export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }: AddLocaleModalProps) {
+export default function AddLocaleModal({
+  isOpen,
+  onClose,
+  projectId,
+  onSuccess,
+}: AddLocaleModalProps) {
   const [localeCode, setLocaleCode] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,7 +32,7 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!localeCode.trim() || !displayName.trim()) {
       toast({
         title: "Missing information",
@@ -33,24 +43,27 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      await browserStorage.addLocale(projectId, localeCode.trim().toLowerCase());
-      
+      await browserStorage.addLocale(
+        projectId,
+        localeCode.trim().toLowerCase(),
+      );
+
       toast({
         title: "Locale added successfully",
         description: `${displayName} (${localeCode}) has been added to the project.`,
       });
-      
+
       setLocaleCode("");
       setDisplayName("");
       onClose();
       onSuccess();
-      
     } catch (error) {
       toast({
         title: "Failed to add locale",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
     } finally {
@@ -72,21 +85,15 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Add New Locale
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClose}
-              disabled={isSubmitting}
-              data-testid="button-close-modal"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="locale-code" className="block text-sm font-medium text-foreground mb-2">
+            <Label
+              htmlFor="locale-code"
+              className="block text-sm font-medium text-foreground mb-2"
+            >
               Locale Code
             </Label>
             <Input
@@ -99,9 +106,12 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
               data-testid="input-locale-code"
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="display-name" className="block text-sm font-medium text-foreground mb-2">
+            <Label
+              htmlFor="display-name"
+              className="block text-sm font-medium text-foreground mb-2"
+            >
               Display Name
             </Label>
             <Input
@@ -114,28 +124,29 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
               data-testid="input-display-name"
             />
           </div>
-          
+
           <div className="text-sm text-muted-foreground">
-            This will copy all translation keys from English (en) with empty values for translation.
+            This will copy all translation keys from English (en) with empty
+            values for translation.
           </div>
-          
+
           <div className="flex justify-end space-x-3 pt-4">
-            <Button 
-              type="button" 
-              variant="secondary" 
+            <Button
+              type="button"
+              variant="secondary"
               onClick={handleClose}
               disabled={isSubmitting}
               data-testid="button-cancel"
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
               data-testid="button-add-locale"
             >
               <Plus className="h-4 w-4 mr-2" />
-              {isSubmitting ? 'Adding...' : 'Add Locale'}
+              {isSubmitting ? "Adding..." : "Add Locale"}
             </Button>
           </div>
         </form>

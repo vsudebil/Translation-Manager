@@ -14,41 +14,25 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: React with TypeScript using Vite as the build tool
 - **UI Components**: Shadcn/ui component library with Radix UI primitives
 - **Styling**: Tailwind CSS with CSS variables for theming
-- **State Management**: TanStack Query for server state management
+- **State Management**: Local component state and localStorage for persistence
 - **Routing**: Wouter for lightweight client-side routing
 - **Form Handling**: React Hook Form with Zod for validation
-
-### Backend Architecture
-- **Runtime**: Node.js with Express.js web framework
-- **Language**: TypeScript with ES modules
-- **API Design**: RESTful endpoints for CRUD operations
-- **File Processing**: Multer for file uploads and JSZip for ZIP file processing
-- **Development**: Custom Vite integration for hot reloading in development
-
-### Data Storage Solutions
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
-- **Schema**: Two main tables - translation_projects and translation_files
-- **In-Memory Fallback**: MemStorage class for development/testing without database
-- **Session Management**: Connect-pg-simple for PostgreSQL session storage
+- **File Processing**: Client-side ZIP file processing using JSZip
+- **Data Storage**: Browser localStorage for project and translation data
+- **Table Virtualization**: TanStack Virtual for efficient rendering of large datasets
 
 ### Key Design Patterns
-- **Shared Schema**: Common TypeScript types and Zod schemas used across client and server
-- **Modular Storage Interface**: IStorage interface allows switching between database and in-memory storage
+- **Client-Side Processing**: All ZIP file parsing and translation management done in the browser
 - **Component Composition**: Reusable UI components following atomic design principles
-- **Server-Side Processing**: ZIP file parsing and translation key extraction on the backend
+- **Virtualized Rendering**: Efficient handling of large translation datasets using virtual scrolling
+- **Local Storage Persistence**: Browser localStorage for maintaining project state between sessions
 
 ### Project Structure
-- `client/` - React frontend application
-- `server/` - Express.js backend API
-- `shared/` - Common schemas and types
+- `client/` - React frontend application (main application)
+- `shared/` - Common TypeScript interfaces and types
 - `components/ui/` - Shadcn/ui component library
-- `migrations/` - Database migration files
 
 ## External Dependencies
-
-### Database Services
-- **Neon Database**: Serverless PostgreSQL database (@neondatabase/serverless)
-- **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect
 
 ### UI and Styling
 - **Radix UI**: Comprehensive set of unstyled, accessible UI primitives
@@ -61,12 +45,14 @@ Preferred communication style: Simple, everyday language.
 - **ESBuild**: Fast bundling for production builds
 
 ### File Processing
-- **JSZip**: JavaScript library for reading and writing ZIP files
-- **Multer**: Middleware for handling multipart/form-data file uploads
+- **JSZip**: JavaScript library for reading and writing ZIP files in the browser
+
+### Virtual Scrolling
+- **TanStack Virtual**: High-performance virtualization for large lists and tables
 
 ### State Management
-- **TanStack React Query**: Data fetching and caching library
 - **React Hook Form**: Performant forms with easy validation
+- **Browser localStorage**: Client-side persistence for translation projects
 
 ### Additional Libraries
 - **Date-fns**: Date manipulation and formatting

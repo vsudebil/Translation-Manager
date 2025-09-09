@@ -149,9 +149,9 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
           className="h-[600px] overflow-auto"
         >
           {/* Fixed Table Header */}
-          <div className="bg-muted/50 border-b border-border sticky top-0 z-10">
-            <div className="flex" style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}>
-              <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64 z-20">
+          <div className="sticky top-0 z-10" style={{ backgroundColor: 'white'}}>
+            <div className="flex border-b "  style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px`, backgroundColor: 'white' }}>
+              <div className="py-3 px-4 z-8  font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64 z-20" style={{ backgroundColor: 'white'}}>
                 Translation Key
               </div>
               {projectData.project.locales.map(locale => {
@@ -159,7 +159,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                 return (
                   <div
                     key={locale}
-                    className="py-3 px-4 font-medium text-foreground min-w-80"
+                    className="py-3 px-4 z-10 font-medium text-foreground min-w-80"
                     data-testid={`header-locale-${locale}`}
                   >
                     <div className="flex items-center space-x-2">
