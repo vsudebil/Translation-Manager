@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Copy, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectData, TranslationKey } from "@shared/schema";
 import { browserStorage } from "@/lib/browserStorage";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface TranslationTableProps {
   projectData: ProjectData;
@@ -77,14 +78,43 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
     });
   };
 
-  // Group keys by file
-  const keysByFile = filteredKeys.reduce((acc, key) => {
-    if (!acc[key.file]) {
-      acc[key.file] = [];
-    }
-    acc[key.file].push(key);
-    return acc;
-  }, {} as Record<string, TranslationKey[]>);
+  // Create flattened list for virtualization (file headers + keys)
+  const virtualItems = useMemo(() => {
+    const items: Array<{ type: 'fileHeader'; filename: string; keys: TranslationKey[] } | { type: 'translationKey'; key: TranslationKey }> = [];
+    
+    // Group keys by file
+    const keysByFile = filteredKeys.reduce((acc, key) => {
+      if (!acc[key.file]) {
+        acc[key.file] = [];
+      }
+      acc[key.file].push(key);
+      return acc;
+    }, {} as Record<string, TranslationKey[]>);
+
+    // Flatten into virtual items
+    Object.entries(keysByFile).forEach(([filename, keys]) => {
+      // Add file header
+      items.push({ type: 'fileHeader', filename, keys });
+      // Add all keys for this file
+      keys.forEach(key => {
+        items.push({ type: 'translationKey', key });
+      });
+    });
+
+    return items;
+  }, [filteredKeys]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  
+  const virtualizer = useVirtualizer({
+    count: virtualItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: (index) => {
+      const item = virtualItems[index];
+      return item?.type === 'fileHeader' ? 56 : 72; // Different heights for headers vs rows
+    },
+    overscan: 10,
+  });
 
   const getLocaleCompleteness = (locale: string) => {
     const stat = projectData.stats.find(s => s.locale === locale);
@@ -113,103 +143,123 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
 
       {/* Table Content */}
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left py-3 px-4 font-medium text-foreground border-b border-border sticky left-0 bg-muted/50 min-w-64">
-                Translation Key
-              </th>
-              {projectData.project.locales.map(locale => {
-                const completeness = getLocaleCompleteness(locale);
-                return (
-                  <th
-                    key={locale}
-                    className="text-left py-3 px-4 font-medium text-foreground border-b border-border min-w-80"
-                    data-testid={`header-locale-${locale}`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span>{locale.toUpperCase()}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
-                        {completeness}%
-                      </span>
-                    </div>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(keysByFile).map(([filename, keys]) => [
-              // File Group Header
-              <tr key={`${filename}-header`} className="file-group-header bg-gradient-to-r from-primary/10 to-accent">
-                <td
-                  colSpan={projectData.project.locales.length + 1}
-                  className="py-3 px-4 font-semibold text-foreground"
-                  data-testid={`file-group-${filename}`}
+        {/* Table Header */}
+        <div className="bg-muted/50 border-b border-border sticky top-0 z-10">
+          <div className="flex">
+            <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64">
+              Translation Key
+            </div>
+            {projectData.project.locales.map(locale => {
+              const completeness = getLocaleCompleteness(locale);
+              return (
+                <div
+                  key={locale}
+                  className="py-3 px-4 font-medium text-foreground min-w-80"
+                  data-testid={`header-locale-${locale}`}
                 >
                   <div className="flex items-center space-x-2">
-                    <FileCode className="h-4 w-4 text-primary" />
-                    <span>{filename}</span>
-                    <span className="text-sm text-muted-foreground">({keys.length} keys)</span>
+                    <span>{locale.toUpperCase()}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
+                      {completeness}%
+                    </span>
                   </div>
-                </td>
-              </tr>,
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Virtualized Table Body */}
+        <div
+          ref={parentRef}
+          className="h-[600px] overflow-auto"
+        >
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const item = virtualItems[virtualItem.index];
               
-              // Translation Keys
-              ...keys.map(key => (
-                <tr
-                  key={key.key}
-                  className="border-b border-border hover:bg-accent/50 transition-colors group"
-                  data-testid={`row-key-${key.key}`}
+              return (
+                <div
+                  key={virtualItem.key}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualItem.size}px`,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
                 >
-                  <td className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border">
-                    <div className="flex items-center space-x-2">
-                      <span data-testid={`text-key-${key.key}`}>{key.key}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                        onClick={() => handleCopyKey(key.key)}
-                        data-testid={`button-copy-${key.key}`}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
+                  {item?.type === 'fileHeader' ? (
+                    // File Group Header
+                    <div className="file-group-header bg-gradient-to-r from-primary/10 to-accent border-b border-border h-full flex items-center">
+                      <div className="py-3 px-4 font-semibold text-foreground w-full" data-testid={`file-group-${item.filename}`}>
+                        <div className="flex items-center space-x-2">
+                          <FileCode className="h-4 w-4 text-primary" />
+                          <span>{item.filename}</span>
+                          <span className="text-sm text-muted-foreground">({item.keys.length} keys)</span>
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  {projectData.project.locales.map(locale => {
-                    const editKey = `${key.key}-${locale}`;
-                    const currentValue = editingValues[editKey] !== undefined 
-                      ? editingValues[editKey] 
-                      : key.translations[locale] || '';
-                    const isEmpty = !key.translations[locale] || key.translations[locale].trim() === '';
-                    
-                    return (
-                      <td key={locale} className="py-2 px-4">
-                        <Input
-                          value={currentValue}
-                          onChange={(e) => handleTranslationChange(key.key, locale, e.target.value)}
-                          onBlur={() => handleTranslationSave(key.key, locale)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                          placeholder={isEmpty ? "Missing translation" : undefined}
-                          className={`translation-input w-full text-sm ${
-                            isEmpty 
-                              ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
-                              : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
-                          }`}
-                          data-testid={`input-translation-${key.key}-${locale}`}
-                        />
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))
-            ].flat())}
-          </tbody>
-        </table>
+                  ) : item?.type === 'translationKey' ? (
+                    // Translation Key Row
+                    <div className="border-b border-border hover:bg-accent/50 transition-colors group h-full flex items-center" data-testid={`row-key-${item.key.key}`}>
+                      <div className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border min-w-64 flex items-center">
+                        <div className="flex items-center space-x-2 w-full">
+                          <span data-testid={`text-key-${item.key.key}`}>{item.key.key}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-auto"
+                            onClick={() => handleCopyKey(item.key.key)}
+                            data-testid={`button-copy-${item.key.key}`}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      {projectData.project.locales.map(locale => {
+                        const editKey = `${item.key.key}-${locale}`;
+                        const currentValue = editingValues[editKey] !== undefined 
+                          ? editingValues[editKey] 
+                          : item.key.translations[locale] || '';
+                        const isEmpty = !item.key.translations[locale] || item.key.translations[locale].trim() === '';
+                        
+                        return (
+                          <div key={locale} className="py-2 px-4 min-w-80 flex items-center">
+                            <Input
+                              value={currentValue}
+                              onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
+                              onBlur={() => handleTranslationSave(item.key.key, locale)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                              placeholder={isEmpty ? "Missing translation" : undefined}
+                              className={`translation-input w-full text-sm ${
+                                isEmpty 
+                                  ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
+                                  : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
+                              }`}
+                              data-testid={`input-translation-${item.key.key}-${locale}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
