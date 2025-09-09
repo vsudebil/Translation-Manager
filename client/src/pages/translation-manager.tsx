@@ -95,7 +95,7 @@ export default function TranslationManager() {
 
   const filteredKeys = projectData.keys.filter(key => {
     const matchesSearch = key.key.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFile = !selectedFile || key.file === selectedFile;
+    const matchesFile = selectedFile === "all" || !selectedFile || key.file === selectedFile;
     
     let matchesStatus = true;
     if (statusFilter === "missing") {
@@ -110,6 +110,8 @@ export default function TranslationManager() {
       matchesStatus = projectData.project.locales.some(locale => 
         key.translations[locale] === ""
       );
+    } else if (statusFilter === "all") {
+      matchesStatus = true;
     }
     
     return matchesSearch && matchesFile && matchesStatus;

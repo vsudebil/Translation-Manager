@@ -60,7 +60,7 @@ export default function FilterControls({
               <SelectValue placeholder="All Files" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="" data-testid="option-all-files">All Files</SelectItem>
+              <SelectItem value="all" data-testid="option-all-files">All Files</SelectItem>
               {fileGroups.map(filename => (
                 <SelectItem key={filename} value={filename} data-testid={`option-file-${filename}`}>
                   {filename} ({getFileKeyCount(filename)} keys)
@@ -79,7 +79,7 @@ export default function FilterControls({
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="" data-testid="option-all-status">All Status</SelectItem>
+              <SelectItem value="all" data-testid="option-all-status">All Status</SelectItem>
               <SelectItem value="complete" data-testid="option-complete">Complete</SelectItem>
               <SelectItem value="missing" data-testid="option-missing">Missing Translations</SelectItem>
               <SelectItem value="empty" data-testid="option-empty">Empty Values</SelectItem>

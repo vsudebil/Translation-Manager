@@ -142,77 +142,75 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
             </tr>
           </thead>
           <tbody>
-            {Object.entries(keysByFile).map(([filename, keys]) => (
-              <div key={filename}>
-                {/* File Group Header */}
-                <tr className="file-group-header bg-gradient-to-r from-primary/10 to-accent">
-                  <td
-                    colSpan={projectData.project.locales.length + 1}
-                    className="py-3 px-4 font-semibold text-foreground"
-                    data-testid={`file-group-${filename}`}
-                  >
+            {Object.entries(keysByFile).map(([filename, keys]) => [
+              // File Group Header
+              <tr key={`${filename}-header`} className="file-group-header bg-gradient-to-r from-primary/10 to-accent">
+                <td
+                  colSpan={projectData.project.locales.length + 1}
+                  className="py-3 px-4 font-semibold text-foreground"
+                  data-testid={`file-group-${filename}`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <FileCode className="h-4 w-4 text-primary" />
+                    <span>{filename}</span>
+                    <span className="text-sm text-muted-foreground">({keys.length} keys)</span>
+                  </div>
+                </td>
+              </tr>,
+              
+              // Translation Keys
+              ...keys.map(key => (
+                <tr
+                  key={key.key}
+                  className="border-b border-border hover:bg-accent/50 transition-colors group"
+                  data-testid={`row-key-${key.key}`}
+                >
+                  <td className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border">
                     <div className="flex items-center space-x-2">
-                      <FileCode className="h-4 w-4 text-primary" />
-                      <span>{filename}</span>
-                      <span className="text-sm text-muted-foreground">({keys.length} keys)</span>
+                      <span data-testid={`text-key-${key.key}`}>{key.key}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                        onClick={() => handleCopyKey(key.key)}
+                        data-testid={`button-copy-${key.key}`}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
                     </div>
                   </td>
+                  {projectData.project.locales.map(locale => {
+                    const editKey = `${key.key}-${locale}`;
+                    const currentValue = editingValues[editKey] !== undefined 
+                      ? editingValues[editKey] 
+                      : key.translations[locale] || '';
+                    const isEmpty = !key.translations[locale] || key.translations[locale].trim() === '';
+                    
+                    return (
+                      <td key={locale} className="py-2 px-4">
+                        <Input
+                          value={currentValue}
+                          onChange={(e) => handleTranslationChange(key.key, locale, e.target.value)}
+                          onBlur={() => handleTranslationSave(key.key, locale)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          placeholder={isEmpty ? "Missing translation" : undefined}
+                          className={`translation-input w-full text-sm ${
+                            isEmpty 
+                              ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
+                              : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
+                          }`}
+                          data-testid={`input-translation-${key.key}-${locale}`}
+                        />
+                      </td>
+                    );
+                  })}
                 </tr>
-                
-                {/* Translation Keys */}
-                {keys.map(key => (
-                  <tr
-                    key={key.key}
-                    className="border-b border-border hover:bg-accent/50 transition-colors group"
-                    data-testid={`row-key-${key.key}`}
-                  >
-                    <td className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border">
-                      <div className="flex items-center space-x-2">
-                        <span data-testid={`text-key-${key.key}`}>{key.key}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                          onClick={() => handleCopyKey(key.key)}
-                          data-testid={`button-copy-${key.key}`}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </td>
-                    {projectData.project.locales.map(locale => {
-                      const editKey = `${key.key}-${locale}`;
-                      const currentValue = editingValues[editKey] !== undefined 
-                        ? editingValues[editKey] 
-                        : key.translations[locale] || '';
-                      const isEmpty = !key.translations[locale] || key.translations[locale].trim() === '';
-                      
-                      return (
-                        <td key={locale} className="py-2 px-4">
-                          <Input
-                            value={currentValue}
-                            onChange={(e) => handleTranslationChange(key.key, locale, e.target.value)}
-                            onBlur={() => handleTranslationSave(key.key, locale)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.currentTarget.blur();
-                              }
-                            }}
-                            placeholder={isEmpty ? "Missing translation" : undefined}
-                            className={`translation-input w-full text-sm ${
-                              isEmpty 
-                                ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
-                                : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
-                            }`}
-                            data-testid={`input-translation-${key.key}-${locale}`}
-                          />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </div>
-            ))}
+              ))
+            ].flat())}
           </tbody>
         </table>
       </div>
