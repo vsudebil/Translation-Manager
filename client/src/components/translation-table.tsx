@@ -143,37 +143,37 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
 
       {/* Table Content */}
       <div className="relative">
-        {/* Fixed Table Header */}
-        <div className="bg-muted/50 border-b border-border overflow-x-auto">
-          <div className="flex" style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}>
-            <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64 z-20">
-              Translation Key
-            </div>
-            {projectData.project.locales.map(locale => {
-              const completeness = getLocaleCompleteness(locale);
-              return (
-                <div
-                  key={locale}
-                  className="py-3 px-4 font-medium text-foreground min-w-80"
-                  data-testid={`header-locale-${locale}`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span>{locale.toUpperCase()}</span>
-                    <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
-                      {completeness}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Scrollable Content Area */}
+        {/* Scrollable Content Area with Fixed Header */}
         <div
           ref={parentRef}
           className="h-[600px] overflow-auto"
         >
+          {/* Fixed Table Header */}
+          <div className="bg-muted/50 border-b border-border sticky top-0 z-10">
+            <div className="flex" style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}>
+              <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64 z-20">
+                Translation Key
+              </div>
+              {projectData.project.locales.map(locale => {
+                const completeness = getLocaleCompleteness(locale);
+                return (
+                  <div
+                    key={locale}
+                    className="py-3 px-4 font-medium text-foreground min-w-80"
+                    data-testid={`header-locale-${locale}`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span>{locale.toUpperCase()}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
+                        {completeness}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Virtualized Content */}
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
