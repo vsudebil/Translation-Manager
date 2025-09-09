@@ -77,7 +77,7 @@ export default function TranslationManager() {
         
         <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
           <UploadSection onUploadComplete={(data) => {
-            window.location.href = `/project/${data.project.id}`;
+            window.location.href = `/Translation-Manager/project/${data.project.id}`;
           }} />
         </main>
       </div>
