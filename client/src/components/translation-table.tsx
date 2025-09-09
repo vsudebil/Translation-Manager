@@ -35,8 +35,8 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
       const file = projectData.files.find(f => f.filename === key.file && f.locale === locale);
       if (!file) return;
 
-      // Update the nested object structure
-      const updatedContent = { ...file.content };
+      // Update the nested object structure  
+      const updatedContent = { ...(file.content as object) };
       const keyParts = keyPath.split('.');
       let current = updatedContent;
       
