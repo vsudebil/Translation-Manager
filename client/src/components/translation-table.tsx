@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectData, TranslationKey } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { browserStorage } from "@/lib/browserStorage";
 
 interface TranslationTableProps {
   projectData: ProjectData;
@@ -49,10 +49,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
       
       current[keyParts[keyParts.length - 1]] = newValue;
 
-      await apiRequest('PATCH', `/api/projects/${projectData.project.id}/translations`, {
-        fileId: file.id,
-        content: updatedContent,
-      });
+      await browserStorage.updateTranslationFile(file.id, updatedContent);
 
       // Remove from editing values
       setEditingValues(prev => {

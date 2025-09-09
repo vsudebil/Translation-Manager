@@ -3,6 +3,7 @@ import { FileArchive, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectData } from "@shared/schema";
+import { browserStorage } from "@/lib/browserStorage";
 
 interface UploadSectionProps {
   onUploadComplete: (data: ProjectData) => void;
@@ -27,21 +28,8 @@ export default function UploadSection({ onUploadComplete }: UploadSectionProps) 
     setUploading(true);
     
     try {
-      const formData = new FormData();
-      formData.append('zipFile', file);
-      formData.append('projectName', `Uploaded Project ${new Date().toLocaleDateString()}`);
-      
-      const response = await fetch('/api/projects/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Upload failed');
-      }
-      
-      const data = await response.json();
+      const projectName = `Uploaded Project ${new Date().toLocaleDateString()}`;
+      const data = await browserStorage.processZipFile(file, projectName);
       onUploadComplete(data);
       
       toast({

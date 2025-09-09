@@ -1,5 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Languages, Download, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import TranslationTable from "@/components/translation-table";
 import FilterControls from "@/components/filter-controls";
 import AddLocaleModal from "@/components/add-locale-modal";
 import { ProjectData } from "@shared/schema";
+import { browserStorage } from "@/lib/browserStorage";
 
 export default function TranslationManager() {
   const params = useParams();
@@ -17,20 +17,35 @@ export default function TranslationManager() {
   const [selectedFile, setSelectedFile] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showAddLocaleModal, setShowAddLocaleModal] = useState(false);
-  
-  const { data: projectData, isLoading, error, refetch } = useQuery<ProjectData>({
-    queryKey: ["/api/projects", projectId],
-    enabled: !!projectId,
-  });
+  const [projectData, setProjectData] = useState<ProjectData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const loadProjectData = async () => {
+    if (!projectId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await browserStorage.getProjectData(projectId);
+      setProjectData(data || null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load project'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjectData();
+  }, [projectId]);
 
   const handleExport = async () => {
     if (!projectId) return;
     
     try {
-      const response = await fetch(`/api/projects/${projectId}/export`);
-      if (!response.ok) throw new Error('Export failed');
-      
-      const blob = await response.blob();
+      const blob = await browserStorage.exportProject(projectId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -85,7 +100,7 @@ export default function TranslationManager() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">Failed to load project data</p>
-          <Button onClick={() => refetch()} data-testid="button-retry">
+          <Button onClick={() => loadProjectData()} data-testid="button-retry">
             Try Again
           </Button>
         </div>
@@ -178,7 +193,7 @@ export default function TranslationManager() {
         <TranslationTable
           projectData={projectData}
           filteredKeys={filteredKeys}
-          onRefresh={refetch}
+          onRefresh={loadProjectData}
         />
 
         <div className="mt-6 bg-card rounded-lg border border-border p-4 shadow-sm">
@@ -205,7 +220,7 @@ export default function TranslationManager() {
         isOpen={showAddLocaleModal}
         onClose={() => setShowAddLocaleModal(false)}
         projectId={projectId}
-        onSuccess={refetch}
+        onSuccess={loadProjectData}
       />
     </div>
   );

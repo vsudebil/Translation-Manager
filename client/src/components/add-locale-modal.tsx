@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { browserStorage } from "@/lib/browserStorage";
 
 interface AddLocaleModalProps {
   isOpen: boolean;
@@ -35,10 +35,7 @@ export default function AddLocaleModal({ isOpen, onClose, projectId, onSuccess }
     setIsSubmitting(true);
     
     try {
-      await apiRequest('POST', `/api/projects/${projectId}/locales`, {
-        localeCode: localeCode.trim().toLowerCase(),
-        displayName: displayName.trim(),
-      });
+      await browserStorage.addLocale(projectId, localeCode.trim().toLowerCase());
       
       toast({
         title: "Locale added successfully",
