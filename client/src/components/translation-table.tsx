@@ -142,42 +142,42 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
       </div>
 
       {/* Table Content */}
-      <div className="overflow-x-auto">
-        {/* Table Header */}
-        <div className="bg-muted/50 border-b border-border sticky top-0 z-10">
-          <div className="flex">
-            <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64">
-              Translation Key
-            </div>
-            {projectData.project.locales.map(locale => {
-              const completeness = getLocaleCompleteness(locale);
-              return (
-                <div
-                  key={locale}
-                  className="py-3 px-4 font-medium text-foreground min-w-80"
-                  data-testid={`header-locale-${locale}`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span>{locale.toUpperCase()}</span>
-                    <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
-                      {completeness}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Virtualized Table Body */}
+      <div className="relative">
+        {/* Virtualized Table with Header */}
         <div
           ref={parentRef}
           className="h-[600px] overflow-auto"
         >
+          {/* Sticky Table Header */}
+          <div className="bg-muted/50 border-b border-border sticky top-0 z-10">
+            <div className="flex" style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}>
+              <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64">
+                Translation Key
+              </div>
+              {projectData.project.locales.map(locale => {
+                const completeness = getLocaleCompleteness(locale);
+                return (
+                  <div
+                    key={locale}
+                    className="py-3 px-4 font-medium text-foreground min-w-80"
+                    data-testid={`header-locale-${locale}`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span>{locale.toUpperCase()}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${getCompletenessColor(completeness)}`}>
+                        {completeness}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Virtualized Content */}
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
-              width: '100%',
+              minWidth: `${256 + (projectData.project.locales.length * 320)}px`,
               position: 'relative',
             }}
           >
@@ -198,7 +198,10 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                 >
                   {item?.type === 'fileHeader' ? (
                     // File Group Header
-                    <div className="file-group-header bg-gradient-to-r from-primary/10 to-accent border-b border-border h-full flex items-center">
+                    <div 
+                      className="file-group-header bg-gradient-to-r from-primary/10 to-accent border-b border-border h-full flex items-center"
+                      style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}
+                    >
                       <div className="py-3 px-4 font-semibold text-foreground w-full" data-testid={`file-group-${item.filename}`}>
                         <div className="flex items-center space-x-2">
                           <FileCode className="h-4 w-4 text-primary" />
@@ -209,7 +212,11 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                     </div>
                   ) : item?.type === 'translationKey' ? (
                     // Translation Key Row
-                    <div className="border-b border-border hover:bg-accent/50 transition-colors group h-full flex items-center" data-testid={`row-key-${item.key.key}`}>
+                    <div 
+                      className="border-b border-border hover:bg-accent/50 transition-colors group h-full flex items-center" 
+                      data-testid={`row-key-${item.key.key}`}
+                      style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}
+                    >
                       <div className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border min-w-64 flex items-center">
                         <div className="flex items-center space-x-2 w-full">
                           <span data-testid={`text-key-${item.key.key}`}>{item.key.key}</span>
