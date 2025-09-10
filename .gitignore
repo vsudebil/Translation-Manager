@@ -4,3 +4,11 @@ node_modules
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Build outputs for GitHub Pages - these should be committed
+# index.html
+# assets/
+
+# Temporary build directory
+gh-pages/
+dist/

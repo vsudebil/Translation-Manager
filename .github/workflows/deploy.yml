@@ -32,7 +32,9 @@ jobs:
         run: npm ci
         
       - name: Build project
-        run: npm run build:gh-pages
+        run: |
+          npm run build
+          node scripts/build-gh-pages.js
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
