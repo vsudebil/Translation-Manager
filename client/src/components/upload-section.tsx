@@ -100,10 +100,13 @@ export default function UploadSection({ onUploadComplete }: UploadSectionProps) 
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              Upload Translation Files
+              Process translation ZIP file
             </h3>
             <p className="text-muted-foreground mb-4">
               Drop your ZIP file containing locale folders (en, de, fr, etc.) with JSON translation files
+            </p>
+            <p className="text-muted-foreground mb-4">
+              Your files will not be uploaded to any server. All processing is done locally in your browser.
             </p>
             <Button 
               onClick={() => fileInputRef.current?.click()}
