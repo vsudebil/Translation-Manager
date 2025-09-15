@@ -4,6 +4,7 @@ export interface TranslationProject {
   id: string;
   name: string;
   locales: string[];
+  createdAt?: string;
 }
 
 export interface TranslationFile {
@@ -12,6 +13,7 @@ export interface TranslationFile {
   filename: string;
   locale: string;
   content: Record<string, string>;
+  updatedAt?: string;
 }
 
 // Additional types for the application

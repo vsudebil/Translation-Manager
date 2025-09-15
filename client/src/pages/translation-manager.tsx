@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import { useParams } from "wouter";
-import { Languages, Download, Plus } from "lucide-react";
+import { useParams, useLocation } from "wouter";
+import { Languages, Download, Plus, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UploadSection from "@/components/upload-section";
 import TranslationTable from "@/components/translation-table";
 import FilterControls from "@/components/filter-controls";
 import AddLocaleModal from "@/components/add-locale-modal";
+import ProjectList from "@/components/project-list";
 import { ProjectData } from "@shared/schema";
 import { browserStorage } from "@/lib/browserStorage";
 
 export default function TranslationManager() {
   const params = useParams();
+  const [, setLocation] = useLocation();
   const projectId = params.id;
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,10 +77,12 @@ export default function TranslationManager() {
           </div>
         </header>
         
-        <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
           <UploadSection onUploadComplete={(data) => {
-            window.location.hash = `/project/${data.project.id}`;
+            setLocation(`/project/${data.project.id}`);
           }} />
+          
+          <ProjectList />
         </main>
       </div>
     );
@@ -145,9 +149,12 @@ export default function TranslationManager() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Languages className="h-8 w-8 text-primary" />
-                <h1 className="text-xl font-bold text-foreground">Translation Manager</h1>
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setLocation('/')} data-testid="button-home">
+                <Languages className="h-8 w-8 text-primary hover:text-primary/80 transition-colors" />
+                <div>
+                  <h1 className="text-xl font-bold text-foreground hover:text-primary transition-colors">Translation Manager</h1>
+                  <p className="text-sm text-muted-foreground" data-testid="text-project-id">Project: {projectId}</p>
+                </div>
               </div>
               <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
                 <span data-testid="text-project-name">{projectData.project.name}</span>
@@ -158,6 +165,15 @@ export default function TranslationManager() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setLocation('/')}
+                data-testid="button-back-home"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => setShowAddLocaleModal(true)}

@@ -30,6 +30,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    allowedHosts: ["0ec0b7b5-963f-40ca-85c1-8364ef30818f-00-2hgfkt93wir69.picard.replit.dev"],
     fs: {
       strict: true,
       deny: ["**/.*"],
