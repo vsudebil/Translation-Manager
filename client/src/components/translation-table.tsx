@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from "react";
 import { Copy, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ProjectData, TranslationKey } from "@shared/schema";
 import { browserStorage } from "@/lib/browserStorage";
@@ -15,6 +16,7 @@ interface TranslationTableProps {
 
 export default function TranslationTable({ projectData, filteredKeys, onRefresh }: TranslationTableProps) {
   const [editingValues, setEditingValues] = useState<Record<string, string>>({});
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleTranslationChange = (keyPath: string, locale: string, value: string) => {
@@ -240,23 +242,49 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                         
                         return (
                           <div key={locale} className="py-2 px-4 min-w-80 flex items-center">
-                            <Input
-                              value={currentValue}
-                              onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
-                              onBlur={() => handleTranslationSave(item.key.key, locale)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.currentTarget.blur();
-                                }
-                              }}
-                              placeholder={isEmpty ? "Missing translation" : undefined}
-                              className={`translation-input w-full text-sm ${
-                                isEmpty 
-                                  ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
-                                  : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
-                              }`}
-                              data-testid={`input-translation-${item.key.key}-${locale}`}
-                            />
+                            {focusedInput === editKey ? (
+                              <Textarea
+                                value={currentValue}
+                                onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
+                                onBlur={() => {
+                                  handleTranslationSave(item.key.key, locale);
+                                  setFocusedInput(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                                placeholder={isEmpty ? "Missing translation" : undefined}
+                                className={`translation-input w-full text-sm min-h-[80px] resize-none ${
+                                  isEmpty 
+                                    ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
+                                    : 'bg-background border-primary focus:border-primary focus:bg-background'
+                                }`}
+                                data-testid={`textarea-translation-${item.key.key}-${locale}`}
+                                autoFocus
+                              />
+                            ) : (
+                              <Input
+                                value={currentValue}
+                                onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
+                                onFocus={() => setFocusedInput(editKey)}
+                                onBlur={() => handleTranslationSave(item.key.key, locale)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                  }
+                                }}
+                                placeholder={isEmpty ? "Missing translation" : undefined}
+                                className={`translation-input w-full text-sm ${
+                                  isEmpty 
+                                    ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
+                                    : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
+                                }`}
+                                data-testid={`input-translation-${item.key.key}-${locale}`}
+                              />
+                            )}
                           </div>
                         );
                       })}
