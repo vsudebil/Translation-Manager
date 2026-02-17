@@ -20,18 +20,25 @@ export default function TranslationManager() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showAddLocaleModal, setShowAddLocaleModal] = useState(false);
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
+  const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const loadProjectData = async () => {
     if (!projectId) return;
     
-    setIsLoading(true);
+    // Only show loading for initial load, not for refreshes
+    if (!projectData) setIsLoading(true);
     setError(null);
     
     try {
       const data = await browserStorage.getProjectData(projectId);
-      setProjectData(data || null);
+      if (data) {
+        setProjectData(data);
+        if (selectedLocales.length === 0) {
+          setSelectedLocales(data.project.locales);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load project'));
     } finally {
@@ -204,12 +211,15 @@ export default function TranslationManager() {
           onStatusChange={setStatusFilter}
           fileGroups={fileGroups}
           projectData={projectData}
+          selectedLocales={selectedLocales}
+          onLocalesChange={setSelectedLocales}
         />
 
         <TranslationTable
           projectData={projectData}
           filteredKeys={filteredKeys}
           onRefresh={loadProjectData}
+          visibleLocales={selectedLocales}
         />
 
         <div className="mt-6 bg-card rounded-lg border border-border p-4 shadow-sm">

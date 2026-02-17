@@ -12,9 +12,10 @@ interface TranslationTableProps {
   projectData: ProjectData;
   filteredKeys: TranslationKey[];
   onRefresh: () => void;
+  visibleLocales: string[];
 }
 
-export default function TranslationTable({ projectData, filteredKeys, onRefresh }: TranslationTableProps) {
+export default function TranslationTable({ projectData, filteredKeys, onRefresh, visibleLocales }: TranslationTableProps) {
   const [editingValues, setEditingValues] = useState<Record<string, string>>({});
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const { toast } = useToast();
@@ -39,9 +40,9 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
       if (!file) return;
 
       // Update the nested object structure  
-      const updatedContent = { ...(file.content as Record<string, any>) };
+      const updatedContent = JSON.parse(JSON.stringify(file.content));
       const keyParts = keyPath.split('.');
-      let current = updatedContent as Record<string, any>;
+      let current = updatedContent;
       
       for (let i = 0; i < keyParts.length - 1; i++) {
         if (!current[keyParts[i]]) {
@@ -61,6 +62,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
         return newValues;
       });
 
+      // Avoid full refresh if only small change, but we need it for completeness stats
       onRefresh();
       
     } catch (error) {
@@ -113,7 +115,14 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
     getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
       const item = virtualItems[index];
-      return item?.type === 'fileHeader' ? 56 : 72; // Different heights for headers vs rows
+      if (item?.type === 'fileHeader') return 56;
+      
+      // Dynamic height estimation based on content length
+      const maxContentLength = Math.max(
+        ...visibleLocales.map(l => (item.key.translations[l] || '').length),
+        item.key.key.length / 2
+      );
+      return Math.max(100, Math.min(300, 60 + Math.ceil(maxContentLength / 40) * 20));
     },
     overscan: 10,
   });
@@ -148,20 +157,20 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
         {/* Scrollable Content Area with Fixed Header */}
         <div
           ref={parentRef}
-          className="h-[600px] overflow-auto"
+          className="h-[700px] overflow-auto"
         >
           {/* Fixed Table Header */}
-          <div className="sticky top-0 z-10" style={{ backgroundColor: 'white'}}>
-            <div className="flex border-b "  style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px`, backgroundColor: 'white' }}>
-              <div className="py-3 px-4 z-8  font-medium text-foreground border-r border-border sticky left-0 bg-muted/50 min-w-64 z-20" style={{ backgroundColor: 'white'}}>
+          <div className="sticky top-0 z-10 bg-background">
+            <div className="flex border-b" style={{ minWidth: '100%' }}>
+              <div className="py-3 px-4 font-medium text-foreground border-r border-border sticky left-0 bg-background min-w-[25%] z-20">
                 Translation Key
               </div>
-              {projectData.project.locales.map(locale => {
+              {visibleLocales.map(locale => {
                 const completeness = getLocaleCompleteness(locale);
                 return (
                   <div
                     key={locale}
-                    className="py-3 px-4 z-10 font-medium text-foreground min-w-80"
+                    className="py-3 px-4 z-10 font-medium text-foreground flex-1 min-w-[300px]"
                     data-testid={`header-locale-${locale}`}
                   >
                     <div className="flex items-center space-x-2">
@@ -179,7 +188,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
-              minWidth: `${256 + (projectData.project.locales.length * 320)}px`,
+              minWidth: '100%',
               position: 'relative',
             }}
           >
@@ -202,7 +211,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                     // File Group Header
                     <div 
                       className="file-group-header bg-gradient-to-r from-primary/10 to-accent border-b border-border h-full flex items-center"
-                      style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}
+                      style={{ minWidth: '100%' }}
                     >
                       <div className="py-3 px-4 font-semibold text-foreground w-full" data-testid={`file-group-${item.filename}`}>
                         <div className="flex items-center space-x-2">
@@ -215,17 +224,17 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                   ) : item?.type === 'translationKey' ? (
                     // Translation Key Row
                     <div 
-                      className="border-b border-border hover:bg-accent/50 transition-colors group h-full flex items-center" 
+                      className="border-b border-border hover:bg-accent/50 transition-colors group h-full flex items-stretch" 
                       data-testid={`row-key-${item.key.key}`}
-                      style={{ minWidth: `${256 + (projectData.project.locales.length * 320)}px` }}
+                      style={{ minWidth: '100%' }}
                     >
-                      <div className="py-3 px-4 font-mono text-sm text-foreground sticky left-0 bg-card border-r border-border min-w-64 flex items-center z-10">
-                        <div className="flex items-center space-x-2 w-full">
+                      <div className="py-3 px-4 font-mono text-xs text-foreground sticky left-0 bg-card border-r border-border min-w-[25%] flex items-start z-10 overflow-hidden break-all">
+                        <div className="flex items-start space-x-2 w-full">
                           <span data-testid={`text-key-${item.key.key}`}>{item.key.key}</span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-auto"
+                            className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-auto flex-shrink-0"
                             onClick={() => handleCopyKey(item.key.key)}
                             data-testid={`button-copy-${item.key.key}`}
                           >
@@ -233,7 +242,7 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                           </Button>
                         </div>
                       </div>
-                      {projectData.project.locales.map(locale => {
+                      {visibleLocales.map(locale => {
                         const editKey = `${item.key.key}-${locale}`;
                         const currentValue = editingValues[editKey] !== undefined 
                           ? editingValues[editKey] 
@@ -241,50 +250,20 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh 
                         const isEmpty = !item.key.translations[locale] || item.key.translations[locale].trim() === '';
                         
                         return (
-                          <div key={locale} className="py-2 px-4 min-w-80 flex items-center">
-                            {focusedInput === editKey ? (
-                              <Textarea
-                                value={currentValue}
-                                onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
-                                onBlur={() => {
-                                  handleTranslationSave(item.key.key, locale);
-                                  setFocusedInput(null);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    e.currentTarget.blur();
-                                  }
-                                }}
-                                placeholder={isEmpty ? "Missing translation" : undefined}
-                                className={`translation-input w-full text-sm min-h-[80px] resize-none ${
-                                  isEmpty 
-                                    ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
-                                    : 'bg-background border-primary focus:border-primary focus:bg-background'
-                                }`}
-                                data-testid={`textarea-translation-${item.key.key}-${locale}`}
-                                autoFocus
-                              />
-                            ) : (
-                              <Input
-                                value={currentValue}
-                                onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
-                                onFocus={() => setFocusedInput(editKey)}
-                                onBlur={() => handleTranslationSave(item.key.key, locale)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.currentTarget.blur();
-                                  }
-                                }}
-                                placeholder={isEmpty ? "Missing translation" : undefined}
-                                className={`translation-input w-full text-sm ${
-                                  isEmpty 
-                                    ? 'bg-destructive/5 border-destructive/20 placeholder:text-destructive/60' 
-                                    : 'bg-transparent border-transparent hover:border-border hover:bg-accent focus:border-primary focus:bg-background'
-                                }`}
-                                data-testid={`input-translation-${item.key.key}-${locale}`}
-                              />
-                            )}
+                          <div key={locale} className="py-2 px-4 flex-1 min-w-[300px] flex items-stretch border-r border-border last:border-r-0">
+                            <Textarea
+                              value={currentValue}
+                              onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
+                              onFocus={() => setFocusedInput(editKey)}
+                              onBlur={() => handleTranslationSave(item.key.key, locale)}
+                              placeholder={isEmpty ? "Missing translation" : undefined}
+                              className={`translation-input w-full text-sm min-h-full transition-all border-none focus-visible:ring-1 focus-visible:ring-primary shadow-none p-1 ${
+                                isEmpty 
+                                  ? 'bg-destructive/5 placeholder:text-destructive/60' 
+                                  : 'bg-transparent hover:bg-accent focus:bg-background'
+                              }`}
+                              data-testid={`textarea-translation-${item.key.key}-${locale}`}
+                            />
                           </div>
                         );
                       })}

@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { ProjectData } from "@shared/schema";
 
 interface FilterControlsProps {
@@ -13,6 +14,8 @@ interface FilterControlsProps {
   onStatusChange: (value: string) => void;
   fileGroups: string[];
   projectData: ProjectData;
+  selectedLocales: string[];
+  onLocalesChange: (locales: string[]) => void;
 }
 
 export default function FilterControls({
@@ -24,15 +27,27 @@ export default function FilterControls({
   onStatusChange,
   fileGroups,
   projectData,
+  selectedLocales,
+  onLocalesChange,
 }: FilterControlsProps) {
   
   const getFileKeyCount = (filename: string) => {
     return projectData.keys.filter(key => key.file === filename).length;
   };
 
+  const toggleLocale = (locale: string) => {
+    if (selectedLocales.includes(locale)) {
+      if (selectedLocales.length > 1) {
+        onLocalesChange(selectedLocales.filter(l => l !== locale));
+      }
+    } else {
+      onLocalesChange([...selectedLocales, locale]);
+    }
+  };
+
   return (
     <div className="bg-card rounded-lg border border-border p-6 mb-6 shadow-sm">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <Label htmlFor="search-input" className="block text-sm font-medium text-foreground mb-2">
             Search Keys
@@ -85,6 +100,25 @@ export default function FilterControls({
               <SelectItem value="empty" data-testid="option-empty">Empty Values</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-border">
+        <Label className="block text-sm font-medium text-foreground mb-3">
+          Display Languages
+        </Label>
+        <div className="flex flex-wrap gap-2">
+          {projectData.project.locales.map(locale => (
+            <Badge
+              key={locale}
+              variant={selectedLocales.includes(locale) ? "default" : "outline"}
+              className="cursor-pointer px-3 py-1 text-sm transition-all"
+              onClick={() => toggleLocale(locale)}
+              data-testid={`badge-toggle-locale-${locale}`}
+            >
+              {locale.toUpperCase()}
+            </Badge>
+          ))}
         </div>
       </div>
     </div>
