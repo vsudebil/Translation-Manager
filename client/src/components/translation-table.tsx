@@ -25,9 +25,9 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh,
     setEditingValues(prev => ({ ...prev, [editKey]: value }));
   };
 
-  const handleTranslationSave = async (keyPath: string, locale: string) => {
+  const handleTranslationSave = async (keyPath: string, locale: string, valueOverride?: string) => {
     const editKey = `${keyPath}-${locale}`;
-    const newValue = editingValues[editKey];
+    const newValue = valueOverride !== undefined ? valueOverride : editingValues[editKey];
     
     if (newValue === undefined) return;
 
@@ -55,14 +55,17 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh,
 
       await browserStorage.updateTranslationFile(file.id, updatedContent);
 
-      // Remove from editing values
-      setEditingValues(prev => {
-        const newValues = { ...prev };
-        delete newValues[editKey];
-        return newValues;
-      });
+      // Remove from editing values only if we are blurring or if it matches current
+      if (valueOverride === undefined) {
+        setEditingValues(prev => {
+          const newValues = { ...prev };
+          delete newValues[editKey];
+          return newValues;
+        });
+      }
 
       // Avoid full refresh if only small change, but we need it for completeness stats
+      // debouncing this might be better for performance, but user wants immediate "save"
       onRefresh();
       
     } catch (error) {
@@ -253,7 +256,12 @@ export default function TranslationTable({ projectData, filteredKeys, onRefresh,
                           <div key={locale} className="py-2 px-4 flex-1 min-w-[300px] flex items-stretch border-r border-border last:border-r-0">
                             <Textarea
                               value={currentValue}
-                              onChange={(e) => handleTranslationChange(item.key.key, locale, e.target.value)}
+                              onChange={(e) => {
+                                handleTranslationChange(item.key.key, locale, e.target.value);
+                                // Debounced or immediate save? User said "save upon every change"
+                                // Let's implement immediate save for responsiveness as per request
+                                handleTranslationSave(item.key.key, locale, e.target.value);
+                              }}
                               onFocus={() => setFocusedInput(editKey)}
                               onBlur={() => handleTranslationSave(item.key.key, locale)}
                               placeholder={isEmpty ? "Missing translation" : undefined}
